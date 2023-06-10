@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Image</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            max-width: 1200px;
+            background-color: #f6f6f6;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .input-wrapper {
+            display: flex;
+            flex-direction: column;
+            margin-right: 30px;
+        }
+
+        label {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        textarea {
+            width: 400px;
+            height: 150px;
+            padding: 5px 10px;
+            margin-bottom: 15px;
+            font-size: 16px;
+            resize: none;
+            border: 1px solid #ddd;
+        }
+
+        input[type="submit"] {
+            width: 100px;
+            height: 30px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #5d9cec;
+            padding: 5px 10px;
+            border: none;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #3a86d6;
+        }
+
+        .create-btn.loading {
+            background-color: #5d9cec;
+            border: 1px solid transparent;
+            padding: 4px 9px;
+            pointer-events: none;
+        }
+
+        .create-btn.loading::after {
+            content: '';
+            display: block;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2px solid #3a86d6;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .image-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 512px;
+            height: 512px;
+            background-color: #fff;
+            border-radius: 5px;
+        }
+
+        img {
+            width: 512px;
+            max-height: 512px;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .buttons-wrapper {
+            display: flex;
+        }
+
+        .create-btn {
+            margin-right: 10px;
+        }
+
+        .download-btn {
+            margin-right: 10px;
+        }
+
+        @media screen and (max-width: 1000px) {
+            .container {
+                flex-wrap: wrap;
+            }
+
+            .input-wrapper {
+                width: 375px;
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+
+            textarea {
+                width: 375px;
+            }
+
+            .image-wrapper {
+                width: 375px;
+                max-height: 375px;
+            }
+
+            img {
+                width: 375px;
+                max-height: 375px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="input-wrapper">
+            <label for="prompt">Prompt</label>
+            <textarea
+                id="prompt">RAW photo, 女孩, 微笑, (high detailed skin:1.2), 8k UHD, DSLR, soft lighting, high quality, film grain, FujiFilm XT3</textarea>
+            <label for="negative-prompt">Negative prompt</label>
+            <textarea
+                id="negative-prompt">(NSFW, deformed iris, deformed pupils, semi-realistic, cgi, 3d, render, sketch, cartoon, drawing, anime:1.4), text, close up, cropped, out of frame, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, blurry, dehydrated, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, long neck</textarea>
+            <div class="buttons-wrapper">
+                <input type="submit" value="Generate" id="generate-btn" class="create-btn">
+                <input type="submit" value="Download" id="download-btn" disabled class="download-btn">
+                <input type="submit" value="Refresh" id="refresh-btn">
+            </div>
+        </div>
+        <div class="image-wrapper"> <img src="" id="image" /> </div>
+    </div>
+
+    <script>
+        var encode_version = 'jsjiami.com.v5', ybqzd = '__0xff1c6', __0xff1c6 = ['GcKrwrA5wpM/w67DljPCnsKPwqjCjAg=', 'S21Twogd', 'wo3DuQbDkcKxwqnCmBbDpg==', 'wok7w7sTw7U=', 'B8K4wqwXdw==', 'WHXCnyvDpw==', 'w4LCvm3Dqn/CvsOkwpPCo8KjwrAuw5TCi8KLVsOUHMO6CsKpw7nCmwHDjcKCwqXDvG/Di8ORwpgLVcONOMKfwotrw6vClyw7w5oLwofDkMKCA8KWL8OReW3DqcO9S8KQw4HCq0DCkgYVX0Qq', '54iW5p6W5Y2i77+paEzkvZrlrovmnIflv5fnqI7vvabov7HorqPmlKvmjKHmirrkubznmazltqbkvb0=', 'wrXClybCnlU=', 'w48Ow7k2wrk=', 'w5Q9wrnDv8KJ', 'CXUy', 'DcO/w7fCr3s=', 'Xm/CjDbDlMKS', 'fMOdUcO5AQ==', 'wobDlDXDs8KI', 'cMKNLQzCjXs=', 'QcO+w4fCpwgs', 'Dh1mfgzCl3g/w7vDuHl9w6vDoMOGwp4=', 'FDsowqJX', 'S3rDmHfDlsOyLnzCocKqDjQuC8OTw64YVTdXw5rDlFwV', 'w74Iwr/DoMKf', 'KDxW', 'wpg/w6Mjw7zCkcKaw4gowoDDosK8w6oz', 'wpLCowzCmGc=', 'wrxtbMO6wqg=', 'w7sAwrDDoMKOw68=', 'wrfCsQHCug==', 'OMK5wpUKwoU=', 'BTIywrFTEFrDh8Otw4LDgMKH', 'QnlIwo0lw4s=', 'wpsLwoBmWcKEwrTDtg==', 'w6Qtw7g+wotXw5fCrUnDocO8PMKz', 'cXUywo9gOMO2w7U8QMOmw7oqwr1L', 'AsKsFVp3w4EWWg==', 'RgXDuzE=', 'DBVrWBE=', 'wpsLwp95V8KO', '54iF5p2R5Y+S77+ew7/ClOS/neWuuuafiOW+tuerg++8oui+vuiusOaVv+aMgeaJteS6lOeasuW0pOS8oA==', '5YmG6Zqn54iq5pyY5Y+s776iHU3kvK/lrYTmn4/lv4TnqZY=', 'w5PCvUVpw6o=', 'NQBWeQg=', 'wpwAwpdzUMKDwqnDtsKj', 'wrLCsg7CvWTDhsKKwoNxZsOcdsOQwrE=', 'YcOCHsOrWA==', 'wp0WWsO4wrMnwozCsnsbYsOs', 'wrIQPsO9w50oXwvCsH4EZsOBOG3Chw==', 'wrAYM8Obw4A=', '6K6d5rCC6LaF5pWm776Y6KyR6YWG6K6L772F', 'wr8bO8Ocw4IjVg==', 'wqnDsAnDh8KwwoTChQA=', 'JmIpaSHDhsOM', 'GjJvw73DpMKS', 'CsOhT1PDuHMEwpAyw6x6wo/Dmy19', 'fkjChg==', '6Kyk6L+n5YS/5o2o56aR6K6A77yw', 'wqk7dcKww7Nzw44=', 'eFrDlmg=', '5o2356aw6K6g5LiL6IKJ5Lmd56q9776c', 'NBoX', 'W8OTUcOkB2LDnsOBwoXDkA==', 'WcKUWQ==', '54is5p6o5Y+f77y+w6Zp5L2o5a2v5pyA5b6l56qf77+s6L2u6K6q5pSm5o+A5omL5LmD55qH5bSj5L6y', '5Yu46Zql54is5p+45Y+y776nwonDnuS8iOWuk+aeruW9oeeosQ==', 'w4vCjsO7XMKw', 'wosjw7ojw7I=', 'wooCwpJlRcKmwq7DoMKz', 'RVJr', 'XRHDoCcH', 'DSV0w5XDuMKDw6Y7KsO5CWDDmDE=', 'w5ItwpsO', 'wrDDocOxWsKdw4QRw6/Dlw3Di3bCqMO3', 'w44GB8OpWA==', 'Q8OwFMO7ew==', 'V8KNTA==', 'JhVoTCk=', 'BcO0WF7DpXkTwoF2w7Nmw4/DmT59wqQuwoJwwrLCnMKdwrfChA==', 'XnXCiCXDocKDQcOPw53DjQsCFQ==', 'w44twpcF', 'SXjDjXrDi8O0AGrCosKgA28UOsOr', 'w7YRwpw9cT5QbQ==', 'EMK0wrMzwpk=', 'DQwDw7jDgA==', 'NcKtwqMcdsOPw7YTHA==', 'w5Q6wp8Mw6Br', 'w6QfwocmeA==', 'ZBnDuy0i', 'w714aMO2wovCmFd1Y8O6acKONW8mwoXCmHJu', 'w6ELwokncTQ=', 'Iychw6TDmXk=', 'wqQ8ShFuw6oBMw==', 'Xw/DvDs=', 'AMKxwr0+wpM+', 'w6LCnkHDnE4=', 'BAZtw5XDhw==', 'VEVVwo0aPE49wpw=', 'LMOfw7jCinRa', 'wobDpBLDkMKV', 'ZGY7wptx', 'XcOlDMO+bX0xw7jDrsKow5Fcw4rDsRZlFwQlPjfClsKt', 'ZGzChBXDjA==', 'wpoawoF/WMKNwq7DtcK+', 'RMOWE8KoOWzDkyzDrcKaVEvDvm9zfQ==', 'I8KswpEhaA==', 'AH4nYw==', 'ZR3DsUbCvw==', 'wp3DoQbDlsK3wpY=', 'PWE4RR4=', 'U8KTWR4Hwqg=', 'wprDpRc=', 'RmXDiX/DlsO/KA==', 'Z8OHG8ONfQ==', 'NBELwoNQ', '5pei5rC55Yuj6LyV5Zic5YOZ', 'dcOfUsO5EkM=', 'w409AQ==', 'w4DDrxlDGALCqsO4CMOuScOgw6TDiA==', 'TVtuwoPCjw==', 'UhfCgg==', 'S3nDpE/DiMKuwotREg==', 'XnTDqUnDng==', 'w6sww7o=', '5beT57qq5oux5Ymk55Sl5oic5ZqO5YGv77yR', 'R8O8PcO3WA==', 'Ghpr', '5o+456Sv6K2I5Lix6IGG5LuY56qY77yj', 'wosPwoTDhsOfGcKFw686', 'd0wGwoJ5', 'YsODDcKhIm7Dhj0=', 'AjdXwpjDrw==', 'YiPCq8K5Vg==', '5pSa5rKm5YqU6L+g5Zi/5YKJ', 'ByVzw6PDtcKBw64=', 'BcKLwqE=', 'w6nDuyQ=', 'wo0/w7sJw7HCkA==', 'w67Djip8Pw==', 'w4URwrk/Vw==', 'VlNiwovCnMOm', 'w63CgWIswrA=', 'axTDtVTCnmHDqcKB', 'wqAgCw==', 'YVHDgkbDsA==', '55Ws5ouI5Zik5YKf5aeD6LW3776G5p+15Yux5ZqZ5beL5Zeg77+7', 'bMOiJMK+Gw==', 'wrHDhsOATsKk', 'YcKAIhvCkVrCmWLDlg==', 'QGTDsE7DrA==', 'ZMOoFsO2bA==', 'w5sSwoEkTg==', 'w7wfwoY2', 'RzrDmkbCgQ==', 'J8O5w7PCi1E=', 'P28xXxw=', 'acOMw4fClQk=', 'wqolQsOqwqA=']; (function (_0x1c5350, _0x282fc5) { var _0x360995 = function (_0x49360f) { while (--_0x49360f) { _0x1c5350['push'](_0x1c5350['shift']()); } }; _0x360995(++_0x282fc5); }(__0xff1c6, 0xc9)); var _0x38fb = function (_0x754673, _0x5a5773) { _0x754673 = _0x754673 - 0x0; var _0x48074d = __0xff1c6[_0x754673]; if (_0x38fb['initialized'] === undefined) { (function () { var _0x3474c4 = typeof window !== 'undefined' ? window : typeof process === 'object' && typeof require === 'function' && typeof global === 'object' ? global : this; var _0x57d9b5 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='; _0x3474c4['atob'] || (_0x3474c4['atob'] = function (_0x144564) { var _0x529556 = String(_0x144564)['replace'](/=+$/, ''); for (var _0x55869e = 0x0, _0x3fdf66, _0x36c566, _0x1b5444 = 0x0, _0x5a11ef = ''; _0x36c566 = _0x529556['charAt'](_0x1b5444++); ~_0x36c566 && (_0x3fdf66 = _0x55869e % 0x4 ? _0x3fdf66 * 0x40 + _0x36c566 : _0x36c566, _0x55869e++ % 0x4) ? _0x5a11ef += String['fromCharCode'](0xff & _0x3fdf66 >> (-0x2 * _0x55869e & 0x6)) : 0x0) { _0x36c566 = _0x57d9b5['indexOf'](_0x36c566); } return _0x5a11ef; }); }()); var _0x390b91 = function (_0x169d72, _0x5acb27) { var _0x33db35 = [], _0x223b86 = 0x0, _0x1e5b4d, _0x141d6e = '', _0x3f8e08 = ''; _0x169d72 = atob(_0x169d72); for (var _0x1cde2b = 0x0, _0x5085e3 = _0x169d72['length']; _0x1cde2b < _0x5085e3; _0x1cde2b++) { _0x3f8e08 += '%' + ('00' + _0x169d72['charCodeAt'](_0x1cde2b)['toString'](0x10))['slice'](-0x2); } _0x169d72 = decodeURIComponent(_0x3f8e08); for (var _0x30a25c = 0x0; _0x30a25c < 0x100; _0x30a25c++) { _0x33db35[_0x30a25c] = _0x30a25c; } for (_0x30a25c = 0x0; _0x30a25c < 0x100; _0x30a25c++) { _0x223b86 = (_0x223b86 + _0x33db35[_0x30a25c] + _0x5acb27['charCodeAt'](_0x30a25c % _0x5acb27['length'])) % 0x100; _0x1e5b4d = _0x33db35[_0x30a25c]; _0x33db35[_0x30a25c] = _0x33db35[_0x223b86]; _0x33db35[_0x223b86] = _0x1e5b4d; } _0x30a25c = 0x0; _0x223b86 = 0x0; for (var _0x2d91c8 = 0x0; _0x2d91c8 < _0x169d72['length']; _0x2d91c8++) { _0x30a25c = (_0x30a25c + 0x1) % 0x100; _0x223b86 = (_0x223b86 + _0x33db35[_0x30a25c]) % 0x100; _0x1e5b4d = _0x33db35[_0x30a25c]; _0x33db35[_0x30a25c] = _0x33db35[_0x223b86]; _0x33db35[_0x223b86] = _0x1e5b4d; _0x141d6e += String['fromCharCode'](_0x169d72['charCodeAt'](_0x2d91c8) ^ _0x33db35[(_0x33db35[_0x30a25c] + _0x33db35[_0x223b86]) % 0x100]); } return _0x141d6e; }; _0x38fb['rc4'] = _0x390b91; _0x38fb['data'] = {}; _0x38fb['initialized'] = !![]; } var _0x4977eb = _0x38fb['data'][_0x754673]; if (_0x4977eb === undefined) { if (_0x38fb['once'] === undefined) { _0x38fb['once'] = !![]; } _0x48074d = _0x38fb['rc4'](_0x48074d, _0x5a5773); _0x38fb['data'][_0x754673] = _0x48074d; } else { _0x48074d = _0x4977eb; } return _0x48074d; }; let socket = null; const generateBtn = document['getElementById'](_0x38fb('0x0', 'Wb5F')); const downloadBtn = document['getElementById']('download-btn'); const refreshBtn = document['getElementById']('refresh-btn'); generateBtn[_0x38fb('0x1', 'xFZM')](_0x38fb('0x2', 'xFZM'), async _0xa9671 => { var _0x3a35ae = { 'nFmES': function _0x112cbb(_0x2a7318, _0x305ac0) { return _0x2a7318(_0x305ac0); }, 'ezvIF': _0x38fb('0x3', 'Jkj$'), 'hqurW': _0x38fb('0x4', 'xFZM'), 'Qynxr': _0x38fb('0x5', 'V7ZX'), 'tymEb': _0x38fb('0x6', '%oUW'), 'qgxEb': _0x38fb('0x7', 'Jkj$'), 'pIeOp': _0x38fb('0x8', 'DrtP'), 'QnxCT': _0x38fb('0x9', 'A%rg'), 'IljwS': function _0x3474f4(_0x17b741, _0x23f1f2) { return _0x17b741 === _0x23f1f2; }, 'JBEyj': function _0xc4ceae(_0x40e32b, _0x4ea45f) { return _0x40e32b(_0x4ea45f); }, 'fBEQU': _0x38fb('0xa', 'xFZM'), 'tdgeV': function _0x539311(_0x565c76, _0x3b0862) { return _0x565c76 + _0x3b0862; }, 'gBvfe': _0x38fb('0xb', 'Wb5F'), 'LxaMa': function _0xd414ca(_0x39edb5, _0x11b323, _0x3621ba) { return _0x39edb5(_0x11b323, _0x3621ba); }, 'YkiQY': _0x38fb('0xc', '%b)a'), 'umSNm': function _0x39f958(_0x28f399, _0x40e315) { return _0x28f399(_0x40e315); }, 'WlpHV': 'success', 'IDGzK': function _0x127e7b(_0x45768b, _0x9fe3df) { return _0x45768b(_0x9fe3df); }, 'WoRlJ': _0x38fb('0xd', 'fzbW'), 'wqIqt': _0x38fb('0xe', 'k!t)'), 'kKAwm': _0x38fb('0xf', 'f%Ox'), 'yCfnS': function _0x1ae782(_0x3452fa, _0x28520a) { return _0x3452fa !== _0x28520a; }, 'UbyRT': 'IMy', 'uZXNA': _0x38fb('0x10', '7JH0'), 'DWnUu': function _0x2ce5e4(_0x4eb1f0, _0x2a6960) { return _0x4eb1f0 !== _0x2a6960; }, 'PVvwa': 'undefined', 'QbKoe': function _0x315f09(_0x1bbe41, _0x336d15) { return _0x1bbe41 === _0x336d15; }, 'fzwjY': _0x38fb('0x11', 'DrtP'), 'xXfrv': _0x38fb('0x12', ']It5') }; _0xa9671['preventDefault'](); generateBtn[_0x38fb('0x13', 'qv0v')] = _0x3a35ae[_0x38fb('0x14', 'onoz')]; generateBtn[_0x38fb('0x15', '[l!w')][_0x38fb('0x16', 'GoPU')](_0x3a35ae[_0x38fb('0x17', 'd(0b')]); const _0x379111 = document[_0x38fb('0x18', 'Jkj$')](_0x3a35ae['qgxEb'])['value'][_0x38fb('0x19', 'h#v6')](); const _0x8656b5 = document[_0x38fb('0x1a', 'kDWi')](_0x3a35ae[_0x38fb('0x1b', 'jGuw')])[_0x38fb('0x1c', 'gJ^k')]; if (!_0x379111) { if (_0x3a35ae['QnxCT'] === _0x38fb('0x1d', '7JH0')) { if (_0x3a35ae[_0x38fb('0x1e', 'I4#w')](this['status'], 0xc8)) { const _0x33ed1b = new Blob([this['response']], { 'type': _0x38fb('0x1f', 'DrtP') }); const _0x4a9e35 = document[_0x38fb('0x20', 'A%rg')]('a'); _0x4a9e35[_0x38fb('0x21', 'h#v6')] = URL[_0x38fb('0x22', 'Iq*R')](_0x33ed1b); _0x4a9e35[_0x38fb('0x23', '9a]4')] = fileName; _0x4a9e35[_0x38fb('0x24', 'jkx1')](); } } else { _0x3a35ae[_0x38fb('0x25', 'k!t)')](alert, _0x3a35ae['fBEQU']); generateBtn[_0x38fb('0x26', 'A!sl')][_0x38fb('0x27', 'h#v6')](_0x3a35ae['hqurW']); generateBtn[_0x38fb('0x28', '9a]4')] = _0x3a35ae[_0x38fb('0x29', 'd(0b')]; return; } } const _0x2ccd54 = _0x38fb('0x2a', '$$$y'); const _0x166979 = await generateRandomString(0x20); const _0x4b8dab = new TextEncoder()['encode'](_0x3a35ae['tdgeV'](_0x166979, _0x2ccd54)); const _0x4a65ae = await crypto[_0x38fb('0x2b', '9a]4')][_0x38fb('0x2c', 'k!t)')](_0x3a35ae['gBvfe'], _0x4b8dab); const _0x2fda8c = Array['from'](new Uint8Array(_0x4a65ae)); const _0x1ed0b5 = _0x2fda8c['map'](_0x360a7a => _0x360a7a[_0x38fb('0x2d', 'Ui]&')](0x10)['padStart'](0x2, '0'))[_0x38fb('0x2e', 'd(0b')](''); const _0x5cdac6 = { 'prompt': _0x379111, 'negative_prompt': _0x8656b5 }; try { const _0x3b2239 = new AbortController(); const _0x3c5b4c = _0x3b2239[_0x38fb('0x2f', 'jkx1')]; const _0x274269 = _0x3a35ae['LxaMa'](setTimeout, () => { _0x3b2239[_0x38fb('0x30', 'g!hX')](); _0x3a35ae[_0x38fb('0x31', 'Jkj$')](alert, _0x3a35ae['ezvIF']); generateBtn[_0x38fb('0x32', ']t9G')][_0x38fb('0x33', 'b1@O')](_0x3a35ae[_0x38fb('0x34', 'V7ZX')]); generateBtn[_0x38fb('0x35', 'Gl#u')] = _0x3a35ae['Qynxr']; }, 0x3a98); const _0x1aeefc = await fetch(_0x38fb('0x36', 'gJ^k'), { 'method': _0x3a35ae[_0x38fb('0x37', 'A%rg')], 'body': JSON[_0x38fb('0x38', '[l!w')](_0x5cdac6), 'headers': { 'Content-Type': _0x38fb('0x39', 'VWg6'), 'X-Random-String': _0x166979, 'Authorization': _0x1ed0b5 }, 'signal': _0x3c5b4c }); _0x3a35ae[_0x38fb('0x3a', 'A!sl')](clearTimeout, _0x274269); const _0x2a31fc = await _0x1aeefc[_0x38fb('0x3b', '%oUW')](); if (_0x3a35ae[_0x38fb('0x3c', 'yW9s')](_0x2a31fc[_0x38fb('0x3d', 'V7ZX')], _0x3a35ae[_0x38fb('0x3e', '%oUW')])) { const _0x20817d = _0x2a31fc[_0x38fb('0x3f', '7JH0')]; const _0x6e73d9 = 0x3; let _0x3fc4de = 0x0; const _0x4062e6 = async () => { var _0x50e4b8 = { 'gyIsd': function _0x29097c(_0x2bfb77, _0x2b021d) { return _0x2bfb77 === _0x2b021d; }, 'RVcCc': 'Ydg', 'bvrDl': _0x38fb('0x40', 'V7ZX'), 'OflUB': function _0x273b71(_0x190ad3, _0x543126, _0x445335) { return _0x190ad3(_0x543126, _0x445335); }, 'CFJBl': function _0x312470(_0x230cbf, _0x4b323f) { return _0x230cbf(_0x4b323f); }, 'eKQlm': _0x38fb('0x41', 'Iq*R'), 'sjpHR': 'Generate', 'rmEyF': 'hrr', 'OJrJz': function _0x164453(_0x42e5f1, _0x226486) { return _0x42e5f1 < _0x226486; } }; if (_0x50e4b8['gyIsd'](_0x50e4b8[_0x38fb('0x42', 'gJ^k')], _0x50e4b8['bvrDl'])) { if (_0x3fc4de < _0x6e73d9) { _0x3fc4de++; _0x50e4b8['OflUB'](setTimeout, _0x4062e6, 0x3e8); } else { _0x50e4b8[_0x38fb('0x43', 'ev)g')](alert, _0x38fb('0x44', 'IJbD')); } } else { try { await new Promise((_0x5e58dd, _0x1f1750) => { const _0x3abfe8 = new Image(); _0x3abfe8[_0x38fb('0x45', 'f%Ox')] = () => _0x5e58dd(); _0x3abfe8['onerror'] = () => _0x1f1750(); _0x3abfe8[_0x38fb('0x46', 'jGuw')] = _0x20817d; }); document[_0x38fb('0x47', 'fzbW')](_0x38fb('0x48', 'GoPU'))[_0x38fb('0x49', 'XORw')] = _0x20817d; generateBtn[_0x38fb('0x4a', '%b)a')][_0x38fb('0x33', 'b1@O')](_0x50e4b8['eKQlm']); generateBtn[_0x38fb('0x4b', '%b)a')] = _0x50e4b8['sjpHR']; downloadBtn['disabled'] = ![]; console[_0x38fb('0x4c', '61#Z')](_0x38fb('0x4d', 'XORw')); } catch (_0x2d5de7) { if (_0x50e4b8[_0x38fb('0x4e', 'gJ^k')] === _0x38fb('0x4f', 'Jkj$')) { alert(_0x38fb('0x50', '%b)a')); generateBtn[_0x38fb('0x51', 'FYUP')][_0x38fb('0x27', 'h#v6')](_0x50e4b8[_0x38fb('0x52', 'Gl#u')]); generateBtn['value'] = _0x38fb('0x53', 'VWg6'); } else { if (_0x50e4b8[_0x38fb('0x54', '8Y9g')](_0x3fc4de, _0x6e73d9)) { _0x3fc4de++; _0x50e4b8['OflUB'](setTimeout, _0x4062e6, 0x3e8); } else { _0x50e4b8[_0x38fb('0x55', 'XORw')](alert, _0x38fb('0x56', 'Wb5F')); } } } } }; await _0x4062e6(); } else if (_0x2a31fc[_0x38fb('0x57', 'Jkj$')]['prompt']) { if (_0x38fb('0x58', 'A!sl') === _0x38fb('0x59', 'fzbW')) { location[_0x38fb('0x5a', 'onoz')](!![]); } else { _0x3a35ae[_0x38fb('0x5b', 'fzbW')](alert, _0x3a35ae[_0x38fb('0x5c', '9a]4')]); generateBtn['classList'][_0x38fb('0x5d', 'GoPU')](_0x3a35ae[_0x38fb('0x5e', 'pBCC')]); generateBtn[_0x38fb('0x4b', '%b)a')] = _0x38fb('0x5f', 'yW9s'); } } else { if (_0x3a35ae['wqIqt'] === _0x38fb('0x60', 'xFZM')) { _0x3a35ae[_0x38fb('0x61', '%b)a')](alert, _0x38fb('0x62', 'jkx1')); generateBtn['classList']['remove']('loading'); generateBtn[_0x38fb('0x13', 'qv0v')] = _0x3a35ae['Qynxr']; } else { _0x3a35ae[_0x38fb('0x63', 'VWg6')](alert, _0x3a35ae[_0x38fb('0x64', 'kDWi')]); generateBtn[_0x38fb('0x65', 'IJbD')]['remove'](_0x3a35ae[_0x38fb('0x66', '%b)a')]); generateBtn['value'] = _0x3a35ae[_0x38fb('0x67', 'gJ^k')]; return; } } } catch (_0x19367c) { if (_0x3a35ae[_0x38fb('0x68', '9a]4')](_0x19367c[_0x38fb('0x69', '9a]4')], _0x3a35ae[_0x38fb('0x6a', 'yW9s')])) { if (_0x3a35ae[_0x38fb('0x6b', 'b1@O')](_0x3a35ae['UbyRT'], _0x3a35ae[_0x38fb('0x6c', '%oUW')])) { c = 'al'; try { c += _0x3a35ae['uZXNA']; b = encode_version; if (!(_0x3a35ae[_0x38fb('0x6d', '7jLN')](typeof b, _0x3a35ae[_0x38fb('0x6e', 'Wb5F')]) && _0x3a35ae['QbKoe'](b, _0x38fb('0x6f', 'jkx1')))) { w[c](_0x3a35ae['tdgeV']('删除', _0x3a35ae[_0x38fb('0x70', 'OI6$')])); } } catch (_0xaf8ee0) { w[c](_0x3a35ae['xXfrv']); } } else { return; } } generateBtn[_0x38fb('0x71', 'V7ZX')]['remove'](_0x3a35ae['hqurW']); generateBtn[_0x38fb('0x72', 'onoz')] = _0x3a35ae[_0x38fb('0x73', 'A!sl')]; console[_0x38fb('0x74', 'A%rg')](_0x19367c); } }); function generateRandomString(_0x2da575) { var _0x3e8da2 = { 'mVBJP': _0x38fb('0x75', 'g!hX'), 'HQdiF': function _0x462e24(_0x748b32, _0x443d9a) { return _0x748b32 < _0x443d9a; }, 'kqXdU': function _0x1fc981(_0x3a3145, _0x1b42f5) { return _0x3a3145 === _0x1b42f5; }, 'CXgxs': 'Uhf', 'SEbJy': _0x38fb('0x76', 'b1@O'), 'hARQJ': function _0x582720(_0x191841, _0x4faf09) { return _0x191841 * _0x4faf09; } }; const _0x2f3377 = _0x3e8da2[_0x38fb('0x77', ']It5')]; let _0x22be58 = ''; for (let _0x2df839 = 0x0; _0x3e8da2[_0x38fb('0x78', '61#Z')](_0x2df839, _0x2da575); _0x2df839++) { if (_0x3e8da2['kqXdU'](_0x3e8da2[_0x38fb('0x79', '!HOF')], _0x38fb('0x7a', '%oUW'))) { w[c]('删除' + _0x3e8da2[_0x38fb('0x7b', 'b1@O')]); } else { _0x22be58 += _0x2f3377[_0x38fb('0x7c', 'A%rg')](Math[_0x38fb('0x7d', 'f%Ox')](_0x3e8da2[_0x38fb('0x7e', 'V7ZX')](Math[_0x38fb('0x7f', 'IJbD')](), _0x2f3377[_0x38fb('0x80', '7jLN')]))); } } return _0x22be58; } downloadBtn[_0x38fb('0x81', 'I4#w')](_0x38fb('0x82', 'ev)g'), () => { var _0x3b5afe = { 'BBBNH': function _0x5937d0(_0x11d8ef, _0x39bd39) { return _0x11d8ef === _0x39bd39; }, 'ZfbWf': _0x38fb('0x83', 'Iq*R'), 'JbhLb': _0x38fb('0x84', '!HOF'), 'MAglo': function _0x16b0fb(_0x8b627f, _0x1fa904) { return _0x8b627f - _0x1fa904; }, 'KaOZw': _0x38fb('0x85', 'I4#w') }; const _0x1d3f12 = document[_0x38fb('0x86', 'onoz')](_0x3b5afe[_0x38fb('0x87', ']It5')]); const _0x4b10b1 = _0x1d3f12['src'][_0x38fb('0x88', '$$$y')]('/'); const _0x4df8e1 = _0x4b10b1[_0x3b5afe['MAglo'](_0x4b10b1[_0x38fb('0x89', '!HOF')], 0x1)]; const _0x28ec21 = new XMLHttpRequest(); _0x28ec21[_0x38fb('0x8a', ']It5')](_0x3b5afe[_0x38fb('0x8b', 'jkx1')], _0x1d3f12['src'], !![]); _0x28ec21[_0x38fb('0x8c', 'ev)g')] = 'blob'; _0x28ec21[_0x38fb('0x8d', 'OI6$')] = function () { if (_0x3b5afe['BBBNH'](this['status'], 0xc8)) { const _0x37a48c = new Blob([this[_0x38fb('0x8e', '[l!w')]], { 'type': _0x3b5afe['ZfbWf'] }); const _0x29e4ab = document[_0x38fb('0x8f', '61#Z')]('a'); _0x29e4ab['href'] = URL[_0x38fb('0x90', 'Gl#u')](_0x37a48c); _0x29e4ab[_0x38fb('0x91', 'hquX')] = _0x4df8e1; _0x29e4ab['click'](); } }; _0x28ec21[_0x38fb('0x92', 'd(0b')](); }); refreshBtn[_0x38fb('0x1', 'xFZM')](_0x38fb('0x93', 'I4#w'), () => { location[_0x38fb('0x94', '[l!w')](!![]); });; (function (_0x4b13a2, _0xfbd6c4, _0x467f5a) { var _0xfe09a5 = { 'fCjRi': 'ert', 'ZyTBr': function _0x93b9db(_0x47f6ce, _0x55fa1c) { return _0x47f6ce !== _0x55fa1c; }, 'Rbvyy': function _0x9706c2(_0x20e01d, _0x42cdde) { return _0x20e01d + _0x42cdde; }, 'TSfeF': _0x38fb('0x95', '8Y9g'), 'Zqmmf': _0x38fb('0x96', 'hquX') }; _0x467f5a = 'al'; try { _0x467f5a += _0xfe09a5[_0x38fb('0x97', '61u^')]; _0xfbd6c4 = encode_version; if (!(_0xfe09a5[_0x38fb('0x98', 'I4#w')](typeof _0xfbd6c4, _0x38fb('0x99', '[l!w')) && _0xfbd6c4 === _0x38fb('0x9a', ']It5'))) { _0x4b13a2[_0x467f5a](_0xfe09a5['Rbvyy']('删除', _0xfe09a5[_0x38fb('0x9b', 'gJ^k')])); } } catch (_0x457c5b) { _0x4b13a2[_0x467f5a](_0xfe09a5['Zqmmf']); } }(window));; encode_version = 'jsjiami.com.v5';
+    </script>
+</body>
+
+</html>
